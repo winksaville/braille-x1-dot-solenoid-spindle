@@ -2,6 +2,7 @@
 name = "dot-solenoid-spindle"
 version = "0.1.0"
 edition = "2021"
+authors = ["Wink Saville <wink@saville.com>"]
 
 [dependencies]
 truck-modeling = "0.3"
