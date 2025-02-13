@@ -1,0 +1,10 @@
+[package]
+name = "dot-solenoid-spindle"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+truck-modeling = "0.3"
+truck-topology = "0.3"
+truck-meshalgo = "0.3"
+truck-polymesh = "0.3"
