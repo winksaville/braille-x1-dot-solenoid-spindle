@@ -1,34 +1,59 @@
-use truck_modeling::*;
-use truck_topology::*;
-use truck_meshalgo::*;
-use truck_polymesh::*;
+//use nalgebra as na;
+use stl_io::{Vertex, Normal, Triangle, write_stl};
 use std::fs::File;
-use std::io::Write;
+use std::io::BufWriter;
+
+fn create_cylinder(radius: f32, height: f32, segments: usize) -> Vec<Triangle> {
+    let mut triangles = Vec::new();
+    let step = std::f32::consts::TAU / segments as f32;
+    
+    for i in 0..segments {
+        let theta1 = i as f32 * step;
+        let theta2 = (i + 1) as f32 * step;
+        let x1 = radius * theta1.cos();
+        let y1 = radius * theta1.sin();
+        let x2 = radius * theta2.cos();
+        let y2 = radius * theta2.sin();
+
+        // Bottom triangle
+        triangles.push(Triangle {
+            normal: Normal::new([0.0, 0.0, -1.0]),
+            vertices: [
+                Vertex::new([0.0, 0.0, 0.0]),
+                Vertex::new([x2, y2, 0.0]),
+                Vertex::new([x1, y1, 0.0]),
+            ],
+        });
+
+        // Top triangle
+        triangles.push(Triangle {
+            normal: Normal::new([0.0, 0.0, 1.0]),
+            vertices: [
+                Vertex::new([0.0, 0.0, height]),
+                Vertex::new([x1, y1, height]),
+                Vertex::new([x2, y2, height]),
+            ],
+        });
+    }
+    
+    triangles
+}
 
 fn main() {
-    // Define parameters
-    let spindle_diameter = 2.0; // mm, internal diameter for the pin
-    let spindle_length = 20.0; // mm, length of the solenoid
-    let flange_diameter = 6.0; // mm, outer diameter of the flanges
-    let flange_thickness = 1.5; // mm, thickness of the end flanges
-    let winding_area_diameter = 4.68; // mm (2.34 * 2), max winding area width
+    let spindle_diameter = 2.0;
+    let spindle_length = 20.0;
+    let flange_diameter = 6.0;
+    let flange_thickness = 1.5;
+    let segments = 32;
 
-    // Create the main spindle body
-    let spindle = Solid::cylinder(winding_area_diameter / 2.0, spindle_length);
+    let mut triangles = Vec::new();
     
-    // Hollow out the center for the pin
-    let hole = Solid::cylinder(spindle_diameter / 2.0, spindle_length);
-    let spindle = spindle.difference(&hole);
-
-    // Add flanges to both ends
-    let flange1 = Solid::cylinder(flange_diameter / 2.0, flange_thickness);
-    let flange2 = flange1.translate((0.0, 0.0, spindle_length - flange_thickness));
+    // Create spindle and flanges
+    triangles.extend(create_cylinder(spindle_diameter / 2.0, spindle_length, segments));
+    triangles.extend(create_cylinder(flange_diameter / 2.0, flange_thickness, segments));
+    triangles.extend(create_cylinder(flange_diameter / 2.0, flange_thickness, segments));
     
-    // Combine the spindle and flanges
-    let spindle = spindle.union(&flange1).union(&flange2);
-    
-    // Export as a STEP file
-    let step_data = spindle.to_step();
-    let mut file = File::create("solenoid_spindle.step").expect("Failed to create file");
-    file.write_all(step_data.as_bytes()).expect("Failed to write file");
+    // Export as STL
+    let mut file = BufWriter::new(File::create("solenoid_spindle.stl").expect("Failed to create file"));
+    write_stl(&mut file, triangles.iter()).expect("Failed to write STL file");
 }

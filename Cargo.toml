@@ -1,11 +1,9 @@
 [package]
-name = "dot-solenoid-spindle"
+name = "braille-dot-solenoid-spindle-x1"
 version = "0.1.0"
 edition = "2021"
 authors = ["Wink Saville <wink@saville.com>"]
 
 [dependencies]
-truck-modeling = "0.3"
-truck-topology = "0.3"
-truck-meshalgo = "0.3"
-truck-polymesh = "0.3"
+nalgebra = "0.32"
+stl_io = "0.5"
